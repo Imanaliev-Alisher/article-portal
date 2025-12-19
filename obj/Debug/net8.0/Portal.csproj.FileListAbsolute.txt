@@ -128,3 +128,4 @@ C:\Users\99670\Projects\knu\begaliev\Portal\obj\Debug\net8.0\ref\Portal.dll
 C:\Users\99670\Projects\knu\begaliev\Portal\bin\Debug\net8.0\Npgsql.dll
 C:\Users\99670\Projects\knu\begaliev\Portal\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
 C:\Users\99670\Projects\knu\begaliev\Portal\bin\Debug\net8.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
+C:\Users\99670\Projects\knu\begaliev\Portal\obj\Debug\net8.0\Portal.sourcelink.json

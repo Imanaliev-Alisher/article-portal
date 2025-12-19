@@ -12,11 +12,13 @@ public class AdminController : Controller
 {
     private readonly PortalContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
 
-    public AdminController(PortalContext context, UserManager<ApplicationUser> userManager)
+    public AdminController(PortalContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
     {
         _context = context;
         _userManager = userManager;
+        _roleManager = roleManager;
     }
 
     // GET: Admin
@@ -179,5 +181,86 @@ public class AdminController : Controller
         TempData["Success"] = "Категория обновлена";
 
         return RedirectToAction(nameof(Categories));
+    }
+
+    // GET: Admin/EditUser/id
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> EditUser(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+            return NotFound();
+
+        var userRoles = await _userManager.GetRolesAsync(user);
+        var allRoles = _roleManager.Roles.Select(r => r.Name).ToList();
+
+        var model = new EditUserViewModel
+        {
+            UserId = user.Id,
+            Email = user.Email ?? "",
+            FullName = user.FullName ?? "",
+            CurrentRoles = userRoles.ToList(),
+            AllRoles = allRoles!
+        };
+
+        return View(model);
+    }
+
+    // POST: Admin/EditUser/id
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> EditUser(string id, EditUserViewModel model)
+    {
+        if (id != model.UserId)
+            return NotFound();
+
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+            return NotFound();
+
+        // Обновляем информацию пользователя
+        user.FullName = model.FullName;
+
+        var updateResult = await _userManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            foreach (var error in updateResult.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+            return View(model);
+        }
+
+        // Обновляем роли
+        var currentRoles = await _userManager.GetRolesAsync(user);
+        var selectedRoles = model.SelectedRoles ?? new List<string>();
+
+        // Удаляем роли, которые были сняты
+        var rolesToRemove = currentRoles.Except(selectedRoles).ToList();
+        if (rolesToRemove.Any())
+        {
+            var removeResult = await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
+            if (!removeResult.Succeeded)
+            {
+                ModelState.AddModelError("", "Ошибка при удалении ролей");
+                return View(model);
+            }
+        }
+
+        // Добавляем новые роли
+        var rolesToAdd = selectedRoles.Except(currentRoles).ToList();
+        if (rolesToAdd.Any())
+        {
+            var addResult = await _userManager.AddToRolesAsync(user, rolesToAdd);
+            if (!addResult.Succeeded)
+            {
+                ModelState.AddModelError("", "Ошибка при добавлении ролей");
+                return View(model);
+            }
+        }
+
+        TempData["Success"] = "Пользователь обновлен";
+        return RedirectToAction(nameof(Users));
     }
 }

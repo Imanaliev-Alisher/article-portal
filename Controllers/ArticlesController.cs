@@ -122,9 +122,12 @@ public class ArticlesController : Controller
         if (article == null)
             return NotFound();
 
-        // Проверка прав - только автор может редактировать
+        // Проверка прав - автор, Admin или Editor
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (article.UserId != userId)
+        var isAdmin = User.IsInRole("Admin");
+        var isEditor = User.IsInRole("Editor");
+        
+        if (article.UserId != userId && !isAdmin && !isEditor)
             return Forbid();
 
         ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", article.CategoryId);
@@ -145,9 +148,12 @@ public class ArticlesController : Controller
         if (existingArticle == null)
             return NotFound();
 
-        // Проверка прав
+        // Проверка прав - автор, Admin или Editor
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (existingArticle.UserId != userId)
+        var isAdmin = User.IsInRole("Admin");
+        var isEditor = User.IsInRole("Editor");
+        
+        if (existingArticle.UserId != userId && !isAdmin && !isEditor)
             return Forbid();
 
         if (!ModelState.IsValid)
@@ -208,9 +214,12 @@ public class ArticlesController : Controller
         if (article == null)
             return NotFound();
 
-        // Проверка прав
+        // Проверка прав - автор, Admin или Editor
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (article.UserId != userId)
+        var isAdmin = User.IsInRole("Admin");
+        var isEditor = User.IsInRole("Editor");
+        
+        if (article.UserId != userId && !isAdmin && !isEditor)
             return Forbid();
 
         return View(article);
@@ -227,9 +236,12 @@ public class ArticlesController : Controller
         if (article == null)
             return NotFound();
 
-        // Проверка прав
+        // Проверка прав - автор, Admin или Editor
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (article.UserId != userId)
+        var isAdmin = User.IsInRole("Admin");
+        var isEditor = User.IsInRole("Editor");
+        
+        if (article.UserId != userId && !isAdmin && !isEditor)
             return Forbid();
 
         // Удаляем изображение

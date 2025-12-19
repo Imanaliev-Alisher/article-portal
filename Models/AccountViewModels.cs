@@ -37,3 +37,21 @@ public class RegisterViewModel
     [StringLength(100)]
     public string? FullName { get; set; }
 }
+
+public class EditUserViewModel
+{
+    public string UserId { get; set; } = "";
+    
+    [Display(Name = "Email")]
+    public string Email { get; set; } = "";
+    
+    [Display(Name = "Полное имя")]
+    [StringLength(100)]
+    public string? FullName { get; set; }
+    
+    public List<string> CurrentRoles { get; set; } = new();
+    public List<string> AllRoles { get; set; } = new();
+    
+    [Display(Name = "Роли")]
+    public List<string>? SelectedRoles { get; set; }
+}
