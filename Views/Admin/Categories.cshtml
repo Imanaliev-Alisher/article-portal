@@ -1,0 +1,95 @@
+@model IEnumerable<ContentPortal.Models.Category>
+@{
+    ViewData["Title"] = "Управление категориями";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>@ViewData["Title"]</h2>
+    <a asp-action="CreateCategory" class="btn btn-primary">Создать категорию</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Название</th>
+                        <th>Описание</th>
+                        <th>Статей</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var category in Model)
+                    {
+                        <tr>
+                            <td>@category.Id</td>
+                            <td><strong>@category.Name</strong></td>
+                            <td>@(category.Description ?? "—")</td>
+                            <td>
+                                <span class="badge bg-primary">@category.Articles.Count</span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a asp-action="EditCategory" asp-route-id="@category.Id" 
+                                       class="btn btn-sm btn-outline-secondary" title="Редактировать">
+                                        ✏️ Изменить
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal@(category.Id)" title="Удалить"
+                                            @(category.Articles.Count > 0 ? "disabled" : "")>
+                                        🗑️ Удалить
+                                    </button>
+                                </div>
+
+                                @if (category.Articles.Count == 0)
+                                {
+                                    <!-- Modal -->
+                                    <div class="modal fade" id="deleteModal@(category.Id)" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Удалить категорию?</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Вы уверены, что хотите удалить категорию "<strong>@category.Name</strong>"?</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                                    <form asp-action="DeleteCategory" method="post" class="d-inline">
+                                                        <input type="hidden" name="id" value="@category.Id" />
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-danger">Удалить</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-3">
+    <strong>ℹ️ Примечание:</strong> Категории со статьями нельзя удалить. Сначала удалите или переместите статьи из категории.
+</div>
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary">Назад к панели</a>
+</div>

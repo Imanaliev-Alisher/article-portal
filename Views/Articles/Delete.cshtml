@@ -1,0 +1,39 @@
+@model ContentPortal.Models.Article
+@{
+    ViewData["Title"] = "Удалить статью";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="alert alert-warning">
+    <h4>Вы уверены, что хотите удалить эту статью?</h4>
+</div>
+
+<div class="card mb-4">
+    @if (!string.IsNullOrEmpty(Model.ImagePath))
+    {
+        <img src="@Model.ImagePath" class="card-img-top" alt="@Model.Title" style="max-height: 300px; object-fit: cover;" />
+    }
+    <div class="card-body">
+        <h5 class="card-title">@Model.Title</h5>
+        <p class="card-text">@Model.Content</p>
+        <div>
+            @if (Model.Category != null)
+            {
+                <span class="badge bg-primary">@Model.Category.Name</span>
+            }
+        </div>
+        <p class="text-muted mt-2">
+            <small>
+                Автор: @(Model.User?.FullName ?? Model.User?.Email ?? "Аноним") |
+                @Model.PublishedAt.ToString("dd.MM.yyyy HH:mm")
+            </small>
+        </p>
+    </div>
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Удалить</button>
+    <a asp-action="Index" class="btn btn-secondary">Отмена</a>
+</form>

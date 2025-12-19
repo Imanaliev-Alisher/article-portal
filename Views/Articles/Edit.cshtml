@@ -1,0 +1,56 @@
+@model ContentPortal.Models.Article
+@{
+    ViewData["Title"] = "Редактировать статью";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Content" class="form-label"></label>
+        <textarea asp-for="Content" class="form-control" rows="8"></textarea>
+        <span asp-validation-for="Content" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CategoryId" class="form-label">Категория</label>
+        <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories">
+            <option value="">-- Выберите категорию --</option>
+        </select>
+        <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.ImagePath))
+    {
+        <div class="mb-3">
+            <label class="form-label">Текущее изображение</label>
+            <div>
+                <img src="@Model.ImagePath" alt="Current image" style="max-width: 300px;" class="img-thumbnail" />
+            </div>
+        </div>
+    }
+
+    <div class="mb-3">
+        <label for="imageFile" class="form-label">Загрузить новое изображение</label>
+        <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/*" />
+        <div class="form-text">Оставьте пустым, чтобы сохранить текущее изображение</div>
+    </div>
+
+    <div class="mb-3">
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <a asp-action="Index" class="btn btn-secondary">Отмена</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

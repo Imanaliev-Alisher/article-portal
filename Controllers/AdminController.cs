@@ -1,0 +1,183 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using ContentPortal.Data;
+using ContentPortal.Models;
+using Microsoft.AspNetCore.Identity;
+
+namespace ContentPortal.Controllers;
+
+[Authorize(Roles = "Admin,Editor")]
+public class AdminController : Controller
+{
+    private readonly PortalContext _context;
+    private readonly UserManager<ApplicationUser> _userManager;
+
+    public AdminController(PortalContext context, UserManager<ApplicationUser> userManager)
+    {
+        _context = context;
+        _userManager = userManager;
+    }
+
+    // GET: Admin
+    public IActionResult Index()
+    {
+        var stats = new
+        {
+            TotalArticles = _context.Articles.Count(),
+            TotalCategories = _context.Categories.Count(),
+            TotalUsers = _context.Users.Count(),
+            RecentArticles = _context.Articles
+                .Include(a => a.Category)
+                .Include(a => a.User)
+                .OrderByDescending(a => a.PublishedAt)
+                .Take(5)
+                .ToList()
+        };
+
+        ViewBag.Stats = stats;
+        return View();
+    }
+
+    // GET: Admin/Articles
+    public IActionResult Articles(string? search)
+    {
+        var articlesQuery = _context.Articles
+            .Include(a => a.Category)
+            .Include(a => a.User)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            articlesQuery = articlesQuery.Where(a => 
+                a.Title.Contains(search) || a.Content.Contains(search));
+            ViewData["CurrentFilter"] = search;
+        }
+
+        var articles = articlesQuery
+            .OrderByDescending(a => a.PublishedAt)
+            .ToList();
+
+        return View(articles);
+    }
+
+    // GET: Admin/Categories
+    public IActionResult Categories()
+    {
+        var categories = _context.Categories
+            .Include(c => c.Articles)
+            .OrderBy(c => c.Name)
+            .ToList();
+
+        return View(categories);
+    }
+
+    // GET: Admin/Users
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Users()
+    {
+        var users = await _context.Users
+            .OrderByDescending(u => u.RegisteredAt)
+            .ToListAsync();
+
+        var userRoles = new Dictionary<string, List<string>>();
+        foreach (var user in users)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            userRoles[user.Id] = roles.ToList();
+        }
+
+        ViewBag.UserRoles = userRoles;
+        return View(users);
+    }
+
+    // POST: Admin/DeleteArticle
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult DeleteArticle(int id)
+    {
+        var article = _context.Articles.Find(id);
+        if (article != null)
+        {
+            // Удаляем изображение если есть
+            if (!string.IsNullOrEmpty(article.ImagePath))
+            {
+                var env = HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
+                var filePath = Path.Combine(env.WebRootPath, article.ImagePath.TrimStart('/'));
+                if (System.IO.File.Exists(filePath))
+                    System.IO.File.Delete(filePath);
+            }
+
+            _context.Articles.Remove(article);
+            _context.SaveChanges();
+            TempData["Success"] = "Статья удалена";
+        }
+
+        return RedirectToAction(nameof(Articles));
+    }
+
+    // POST: Admin/DeleteCategory
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult DeleteCategory(int id)
+    {
+        var category = _context.Categories.Find(id);
+        if (category != null)
+        {
+            _context.Categories.Remove(category);
+            _context.SaveChanges();
+            TempData["Success"] = "Категория удалена";
+        }
+
+        return RedirectToAction(nameof(Categories));
+    }
+
+    // GET: Admin/CreateCategory
+    public IActionResult CreateCategory()
+    {
+        return View();
+    }
+
+    // POST: Admin/CreateCategory
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult CreateCategory(Category category)
+    {
+        if (!ModelState.IsValid)
+            return View(category);
+
+        _context.Categories.Add(category);
+        _context.SaveChanges();
+        TempData["Success"] = "Категория создана";
+
+        return RedirectToAction(nameof(Categories));
+    }
+
+    // GET: Admin/EditCategory/5
+    public IActionResult EditCategory(int id)
+    {
+        var category = _context.Categories.Find(id);
+        if (category == null)
+            return NotFound();
+
+        return View(category);
+    }
+
+    // POST: Admin/EditCategory/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult EditCategory(int id, Category category)
+    {
+        if (id != category.Id)
+            return NotFound();
+
+        if (!ModelState.IsValid)
+            return View(category);
+
+        _context.Categories.Update(category);
+        _context.SaveChanges();
+        TempData["Success"] = "Категория обновлена";
+
+        return RedirectToAction(nameof(Categories));
+    }
+}

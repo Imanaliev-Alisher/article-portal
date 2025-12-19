@@ -1,0 +1,24 @@
+@model ContentPortal.Models.Category
+@{
+    ViewData["Title"] = "Удалить категорию";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="alert alert-warning">
+    <h4>Вы уверены, что хотите удалить эту категорию?</h4>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">@Model.Name</h5>
+        <p class="card-text">@Model.Description</p>
+        <p class="text-muted">Статей в категории: @Model.Articles.Count</p>
+    </div>
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Удалить</button>
+    <a asp-action="Index" class="btn btn-secondary">Отмена</a>
+</form>
